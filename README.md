@@ -31,8 +31,11 @@ All the project will be developed under a [MIT][mit] license.
 
 
 [1] Cano Rodriguez, J. L., & Martínez Garrido, J. (2022). poliastro (Version v0.17.0) [Computer software]. https://github.com/poliastro/poliastro/
+
 [2] David Vallado, Paul Crawford, Richard Hujsak, and T.S. Kelso. Revisiting spacetrack report #3. AIAA/AAS Astrodynamics Specialist Conference and Exhibit, 2012. doi: 10.2514/6.2006-6753. URL https://arc.aiaa.org/doi/abs/10.2514/6.2006-6753
+
 [3] T S Kelso. Norad two-line element set format, Dec 2019. URL https://www.celestrak.com/NORAD/documentation/tle-fmt.php
+
 [4] ROCKWOOD, Troy; STEEGER, Greg; STEIN, Matthew. Generating Realistic Two-Line Elements for Notional Space Vehicles and Constellations. arXiv preprint arXiv:2203.04204, 2022. https://doi.org/10.48550/arXiv.2203.04204
 
 [//]: # (These are reference links used in the text)
