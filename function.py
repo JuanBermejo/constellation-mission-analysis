@@ -2,21 +2,21 @@ import numpy as np
 
 def Rs(i,e,w):
     """
-    Calculates the mean radius under the satellite, Rs [deg]
+    Calculates the mean radius under the satellite, Rs [km]
 
     Parameters
     ----------
     i : float
         inclination of the orbit [deg]
     e : float
-        excentricity of the orbit
+        eccentricity of the orbit [-]
     w : float
         argument of the perigee of the orbit [deg]
 
     Returns
     -------
     Rs : float
-        mean radius under the satellite [deg]
+        mean radius under the satellite [km]
     """
 
     coef_matrix = np.matrix(
@@ -89,7 +89,7 @@ def Rs(i,e,w):
 
 def semimayor_axis(Ap, e, Rs):
     """
-    Calculates the semimayor axis of an orbit, a [km]
+    Calculates the semi-major axis of an orbit, a [km]
 
     Parameters
     ----------
