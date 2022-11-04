@@ -1,4 +1,4 @@
-from function import *
+from generating_TLE_function import *
 
 # This is a test for the value of Rs
 # The expected result for i=55 deg, e=0, w=0 deg is Rs = 6371.009 km.
