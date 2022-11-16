@@ -1,6 +1,6 @@
 import numpy as np
 
-def Rs(i,e,w):
+def Rs(i,e,AOP):
     """
     Calculates the mean radius under the satellite, Rs [km]
 
@@ -10,7 +10,7 @@ def Rs(i,e,w):
         inclination of the orbit [deg]
     e : float
         eccentricity of the orbit [-]
-    w : float
+    AOP : float
         argument of the perigee of the orbit [deg]
 
     Returns
@@ -82,7 +82,7 @@ def Rs(i,e,w):
 
     Rs = 0
     for j in range(rows):
-        row_rs = coef_matrix[j,3]*i**coef_matrix[j,0]*e**coef_matrix[j,1]*w**coef_matrix[j,2]
+        row_rs = coef_matrix[j,3]*i**coef_matrix[j,0]*e**coef_matrix[j,1]*AOP**coef_matrix[j,2]
         Rs += row_rs
 
     return Rs/1000
@@ -213,6 +213,3 @@ Revolution_number, Classification, International_designator, Element_set_number)
 
     TLE = (TLE1, TLE2)
     return(TLE)
-
-
-
