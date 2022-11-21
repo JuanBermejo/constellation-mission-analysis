@@ -58,3 +58,11 @@ ax2.set_ylabel("Drag term [--]")
 plt.legend()
 plt.title("TLE-terms evolution")
 plt.show()
+
+MM_Dot_mean = np.mean(MM_Dot)
+MM_DDot_mean = np.mean(MM_DDot)
+BSTAR_mean = np.mean(BSTAR)
+
+print("MM_Dot_mean =", MM_Dot_mean)
+print("MM_DDot_mean =", MM_DDot_mean)
+print("BSTAR_mean =", BSTAR_mean)
