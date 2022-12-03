@@ -97,3 +97,6 @@ def print_sat(sat, name):
     """Prints Satrec object in convenient form."""
     print(json.dumps(exporter.export_omm(sat, name), indent=2))
 
+def sat_to_dict(sat,name):
+    """Convert Satrec object into a dictionary."""
+    return exporter.export_omm(sat, name)
