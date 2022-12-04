@@ -40,4 +40,4 @@ print("The rotation of the orbital plane in one day is equal to", plane_rotation
 # The Righ Ascension of the Sun on the 21/11/2022 is 15h 43m 50s = 235.96 deg 
 H0 = (RAAN - 235.96)/15 + 12
 print("RAAN =", RAAN)
-print("The satellite crosses the Ecuator at", H0)
+print("The satellite crosses the Ecuator at", 12+H0)
