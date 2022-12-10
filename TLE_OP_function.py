@@ -27,7 +27,7 @@ def from_TLE_to_OrbParams(constellation):
         Eccenticity [-]
     a: float array
         Semi-major axis [km]
-    w: float array
+    AOP: float array
         Argument of the perigee [deg]
     """
 
@@ -38,34 +38,20 @@ def from_TLE_to_OrbParams(constellation):
     RAAN = np.zeros(len(constellation))
     i = np.zeros(len(constellation))
     e = np.zeros(len(constellation))
+    MM = np.zeros(len(constellation))
     a = np.zeros(len(constellation))
-    w = np.zeros(len(constellation))
+    AOP = np.zeros(len(constellation))
     
     # The first loop considers all the satellites in the constellation
     for j in range(len(constellation)): 
         sat = list(load_gp_from_celestrak(name=constellation[j]))[0]
+        sat_dict = sat_to_dict(sat,constellation[j]) 
 
-        now = Time.now()
-        now.jd1, now.jd2
+        RAAN[j] = sat_dict["RA_OF_ASC_NODE"]
+        i[j] = sat_dict["INCLINATION"]
+        e[j] = sat_dict["ECCENTRICITY"]
+        AOP[j] = sat_dict["ARG_OF_PERICENTER"]
+        MM[j] = sat_dict["MEAN_MOTION"]
+        a[j] = (mu/(MM[j]*2*np.pi/86400)**2)**(1/3)  
 
-        error, r_vec, v_vec = sat.sgp4(now.jd1, now.jd2)
-        assert error == 0
-        
-        # The angular momemtum vector is calculated with the cross product between r_vecs and v_vecs
-        h_vec = np.cross(r_vec,v_vec)
-        
-        RAAN[j] = np.arcsin(h_vec[0]/np.sqrt(h_vec[0]**2+h_vec[1]**2))*180/np.pi
-        h = np.linalg.norm(h_vec)
-        i[j] = np.arccos(h_vec[2]/h)*180/np.pi
-        
-        e_vec = np.cross(v_vec,h_vec)/mu - r_vec/np.linalg.norm(r_vec)
-        e[j] = np.linalg.norm(e_vec)
-        
-        p = h**2/mu
-        a[j] = p/(1-e[j]**2)
-        n = np.array( [np.cos(RAAN[j]), np.sin(RAAN[j]), 0] )
-        w[j] = np.arccos( np.dot(e_vec,n)/e[j] )*180/np.pi   
-
-    return RAAN, i, e, a, w
-        
-        
+    return RAAN, i, e, a, AOP
