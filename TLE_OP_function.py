@@ -29,6 +29,8 @@ def from_TLE_to_OrbParams(constellation):
         Semi-major axis [km]
     AOP: float array
         Argument of the perigee [deg]
+    MA: float array
+        Mean anomaly [deg]
     """
 
     # Definition of the earth gravitational parameter [km^3/s^2]
@@ -41,6 +43,7 @@ def from_TLE_to_OrbParams(constellation):
     MM = np.zeros(len(constellation))
     a = np.zeros(len(constellation))
     AOP = np.zeros(len(constellation))
+    MA = np.zeros(len(constellation))
     
     # The first loop considers all the satellites in the constellation
     for j in range(len(constellation)): 
@@ -52,6 +55,7 @@ def from_TLE_to_OrbParams(constellation):
         e[j] = sat_dict["ECCENTRICITY"]
         AOP[j] = sat_dict["ARG_OF_PERICENTER"]
         MM[j] = sat_dict["MEAN_MOTION"]
-        a[j] = (mu/(MM[j]*2*np.pi/86400)**2)**(1/3)  
+        a[j] = (mu/(MM[j]*2*np.pi/86400)**2)**(1/3) 
+        MA[j] = sat_dict["MEAN_ANOMALY"]
 
-    return RAAN, i, e, a, AOP
+    return RAAN, i, e, a, AOP, MA
