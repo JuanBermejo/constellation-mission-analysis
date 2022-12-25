@@ -8,7 +8,18 @@ from poliastro.util import time_range
 from scipy.optimize import fsolve
 
 
-FOSSA_list = (
+# DATOS
+Rt = 6378 # km
+mu = 3.986e5 # km3/s2
+
+# la GS está en Reyjkiavik (65.64737 N -20.24609 E) y se considera una elevación mínima de 15 deg
+eps_GS = np.deg2rad(15) # rad
+lat_GS = np.deg2rad(65.64737) # rad
+long_GS = np.deg2rad(-20.24609) # rad
+
+n_eval = 3000
+
+constellation = (
     "FOSSASAT-2E2", 
     # "FOSSASAT-2E1",
     # "FOSSASAT-2E4", 
@@ -22,52 +33,75 @@ FOSSA_list = (
     # "FOSSASAT-2E8" 
 )
 
-# DATOS
-Rt = 6378 # km
-mu = 3.986e5 # km3/s2
-# la GS está en Reyjkiavik (65.64737 N -20.24609 E) y se considera una elevación mínima de 15 deg
-eps_GS = np.deg2rad(15) # rad
-lat_GS = np.deg2rad(65.64737) # rad
-long_GS = np.deg2rad(-20.24609) # rad
+# def visibility_status(constellation, lat_GS, long_GS, n_eval):
 
-RAAN_deg, i_deg, e, a, AOP_deg, MA_deg = from_TLE_to_OrbParams(FOSSA_list)
+# Obtengo los parámetros orbitales para la última actualización del TLE del satélite
+RAAN_deg, i_deg, e, a, AOP_deg, MA_deg = from_TLE_to_OrbParams(constellation)
+
 # paso los datos de los parámetros orbitales a radianes para utilizar np.cos, np.sin, np.tan, etc.
 RAAN =  np.deg2rad(RAAN_deg) # rad
 i =  np.deg2rad(i_deg) # rad
 AOP =  np.deg2rad(AOP_deg) # rad
 MA =  np.deg2rad(MA_deg) # rad
+
 # calculo el periodo de la órbita
 T_sat = 2*np.pi*np.sqrt(a**3/mu) # s
 
-time_span = np.linspace(0, T_sat, 6) # vector de tiempos que va de 0 (paso por el perigeo) hasta el periodo orbital en 4 tiempos
-r_dot_cospsi = np.zeros(len(time_span))
-E = np.zeros(len(time_span))
-TA = np.zeros(len(time_span))
-r = np.zeros(len(time_span))
+# Considero que el satélite se encuentra en el perigeo en el momento en el que se ha actualizado el TLE
+# Creo un vector de tiempos (en s) que va de 0 (paso por el perigeo) hasta el periodo orbital en n_eval tiempos
+time_span = np.linspace(0, 30000, n_eval)
 
+r_dot_cospsi = np.zeros(len(time_span))
 w_rot_T = 2*np.pi/(24*3600) # rad/s
-GST0 = 0 # TBD!!!! 
+
+# Calculo el LST de la GS en el instante inicial
+lat = 65.64737*u.deg
+lon = -20.24609*u.deg
+sat = list(load_gp_from_celestrak(name=constellation[0]))[0]
+sat_dict = sat_to_dict(sat,constellation[0])
+time = Time(sat_dict["EPOCH"], scale='utc')
+LST_deg = time.sidereal_time('mean', longitude=lon)
+
 for index, t in enumerate(time_span):
-    # Hallo la anomalía excéntrica 
+    # Hallo la anomalía excéntrica (rad) para cada instante de tiempo 
     def f(E):
         return E - e*np.sin(E) - np.sqrt(mu/a**3)*t
-    E[index] = fsolve(f, 0) # rad
-    if E[index] < 0:
-        E[index] = 2*np.pi + E[index]
-    # Hallo el radio y la anomalía verdadera
-    r[index] = a*(1-e*np.cos(E[index])) # km
-    TA[index] = 2*np.arctan(np.sqrt((1+e)/(1-e))*np.tan(E[index]/2)) # rad
-    if TA[index] < 0:
-        TA[index] = 2*np.pi + TA[index]
-    LST = GST0 + long_GS + w_rot_T*t
-    r_dot_cospsi[index] = r[index]*( np.cos(lat_GS)*( np.cos(AOP+TA[index])*np.cos(LST-RAAN)+np.cos(i)*np.sin(AOP+TA[index])*np.sin(LST-RAAN) ) + np.sin(lat_GS)*np.sin(i)*np.sin(AOP+TA[index]) )
+    E = fsolve(f, 0) # rad
+    if E < 0:
+        E = 2*np.pi + E
+    # Hallo el radio (km) y la anomalía verdadera (rad)
+    r = a*(1-e*np.cos(E)) # km
+    TA = 2*np.arctan(np.sqrt((1+e)/(1-e))*np.tan(E/2)) # rad
+    if TA < 0:
+        TA = 2*np.pi + TA
+    # Hallo el tiempo sidereo local de la estación 
+    LST_rad = LST_deg.value*np.pi/180 + w_rot_T*t
+    # Ec(24) apartado 6.4 Elices 
+    r_dot_cospsi[index] = r*( np.cos(lat_GS)*( np.cos(AOP+TA)*np.cos(LST_rad-RAAN) + np.cos(i)*np.sin(AOP+TA)*np.sin(LST_rad-RAAN) ) + np.sin(lat_GS)*np.sin(i)*np.sin(AOP+TA) )
+    # r*( np.cos(lat_GS)*( np.cos(AOP+TA)*np.cos(LST_rad-RAAN) + np.cos(i)*np.sin(AOP+TA)*np.sin(LST_rad-RAAN) ) + np.sin(lat_GS)*np.sin(i)*np.sin(AOP+TA) )
+    # print("r, r_dot_cospsi, E, TA, LST_rad, AOP, RAAN, i, lat_GS", r, r_dot_cospsi[index], E, TA, LST_rad, AOP, RAAN, i, lat_GS)
 
+# Ec(21) apartado 6.4 Elices 
 eps_sat = np.arcsin((r_dot_cospsi - Rt)/np.sqrt(r**2 + Rt**2 - 2*Rt*r_dot_cospsi))
-print(eps_sat*180/np.pi)
+# print(eps_sat*180/np.pi)
 for j in range(len(eps_sat)):
     if eps_sat[j] < 0:
-        eps_sat[j] = 2*np.pi+eps_sat[j]
-print(eps_sat*180/np.pi)
+        eps_sat[j] = 2*np.pi + eps_sat[j]
+# print(eps_sat*180/np.pi)
+
+# Evalúo si la GS ve al satélite (True) o si no lo ve (False)
+status = np.zeros(len(time_span))
+for j in range(len(eps_sat)):
+    if (eps_sat[j] >= eps_GS) and (eps_sat[j] <= np.pi- eps_GS):
+        status[j] = 1 # true
+    else:
+        status[j] = 2 # false
+
+print(time_span[np.where(status == np.amin(status))])
+print(np.where(status == np.amin(status)) )
+print(status[500])
+print("t del 1er contacto =", time_span[523] - time_span[499])
+print("t del 2o contacto =", time_span[1086] - time_span[1054])
 
 # ANTIGUO
 # -------
