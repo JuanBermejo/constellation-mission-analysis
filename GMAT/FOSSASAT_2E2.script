@@ -1,0 +1,217 @@
+%General Mission Analysis Tool(GMAT) Script
+%Created: 2022-12-21 11:30:49
+
+
+%----------------------------------------
+%---------- Spacecraft
+%----------------------------------------
+
+Create Spacecraft FOSSASAT_2E2;
+GMAT FOSSASAT_2E2.DateFormat = UTCGregorian;
+GMAT FOSSASAT_2E2.Epoch = '25 Dec 2022 03:32:07.444';
+GMAT FOSSASAT_2E2.CoordinateSystem = EarthMJ2000Eq;
+GMAT FOSSASAT_2E2.DisplayStateType = Keplerian;
+GMAT FOSSASAT_2E2.SMA = 6859.215162019999;
+GMAT FOSSASAT_2E2.ECC = 0.001146899999999974;
+GMAT FOSSASAT_2E2.INC = 97.4697;
+GMAT FOSSASAT_2E2.RAAN = 65.8977;
+GMAT FOSSASAT_2E2.AOP = 104.9742999999983;
+GMAT FOSSASAT_2E2.TA = 8.537736462515939e-07;
+GMAT FOSSASAT_2E2.DryMass = 850;
+GMAT FOSSASAT_2E2.Cd = 2.2;
+GMAT FOSSASAT_2E2.Cr = 1.8;
+GMAT FOSSASAT_2E2.DragArea = 15;
+GMAT FOSSASAT_2E2.SRPArea = 1;
+GMAT FOSSASAT_2E2.SPADDragScaleFactor = 1;
+GMAT FOSSASAT_2E2.SPADSRPScaleFactor = 1;
+GMAT FOSSASAT_2E2.NAIFId = -10000001;
+GMAT FOSSASAT_2E2.NAIFIdReferenceFrame = -9000001;
+GMAT FOSSASAT_2E2.OrbitColor = Red;
+GMAT FOSSASAT_2E2.TargetColor = Teal;
+GMAT FOSSASAT_2E2.OrbitErrorCovariance = [ 1e+70 0 0 0 0 0 ; 0 1e+70 0 0 0 0 ; 0 0 1e+70 0 0 0 ; 0 0 0 1e+70 0 0 ; 0 0 0 0 1e+70 0 ; 0 0 0 0 0 1e+70 ];
+GMAT FOSSASAT_2E2.CdSigma = 1e+70;
+GMAT FOSSASAT_2E2.CrSigma = 1e+70;
+GMAT FOSSASAT_2E2.Id = 'SatId';
+GMAT FOSSASAT_2E2.Attitude = CoordinateSystemFixed;
+GMAT FOSSASAT_2E2.SPADSRPInterpolationMethod = Bilinear;
+GMAT FOSSASAT_2E2.SPADSRPScaleFactorSigma = 1e+70;
+GMAT FOSSASAT_2E2.SPADDragInterpolationMethod = Bilinear;
+GMAT FOSSASAT_2E2.SPADDragScaleFactorSigma = 1e+70;
+GMAT FOSSASAT_2E2.ModelFile = 'aura.3ds';
+GMAT FOSSASAT_2E2.ModelOffsetX = 0;
+GMAT FOSSASAT_2E2.ModelOffsetY = 0;
+GMAT FOSSASAT_2E2.ModelOffsetZ = 0;
+GMAT FOSSASAT_2E2.ModelRotationX = 0;
+GMAT FOSSASAT_2E2.ModelRotationY = 0;
+GMAT FOSSASAT_2E2.ModelRotationZ = 0;
+GMAT FOSSASAT_2E2.ModelScale = 1;
+GMAT FOSSASAT_2E2.AttitudeDisplayStateType = 'Quaternion';
+GMAT FOSSASAT_2E2.AttitudeRateDisplayStateType = 'AngularVelocity';
+GMAT FOSSASAT_2E2.AttitudeCoordinateSystem = EarthMJ2000Eq;
+GMAT FOSSASAT_2E2.EulerAngleSequence = '321';
+
+%----------------------------------------
+%---------- GroundStations
+%----------------------------------------
+
+Create GroundStation Reykjiavik;
+GMAT Reykjiavik.OrbitColor = [0 0 255];
+GMAT Reykjiavik.TargetColor = [0 255 0];
+GMAT Reykjiavik.CentralBody = Earth;
+GMAT Reykjiavik.StateType = Spherical;
+GMAT Reykjiavik.HorizonReference = Sphere;
+GMAT Reykjiavik.Location1 = 65.64737;
+GMAT Reykjiavik.Location2 = 339.754;
+GMAT Reykjiavik.Location3 = 53;
+GMAT Reykjiavik.Id = 'StationId';
+GMAT Reykjiavik.IonosphereModel = 'None';
+GMAT Reykjiavik.TroposphereModel = 'None';
+GMAT Reykjiavik.DataSource = 'Constant';
+GMAT Reykjiavik.Temperature = 295.1;
+GMAT Reykjiavik.Pressure = 1013.5;
+GMAT Reykjiavik.Humidity = 55;
+GMAT Reykjiavik.MinimumElevationAngle = 15;
+
+
+%----------------------------------------
+%---------- ForceModels
+%----------------------------------------
+
+Create ForceModel DefaultProp_ForceModel;
+GMAT DefaultProp_ForceModel.CentralBody = Earth;
+GMAT DefaultProp_ForceModel.PrimaryBodies = {Earth};
+GMAT DefaultProp_ForceModel.Drag = None;
+GMAT DefaultProp_ForceModel.SRP = Off;
+GMAT DefaultProp_ForceModel.RelativisticCorrection = Off;
+GMAT DefaultProp_ForceModel.ErrorControl = RSSStep;
+GMAT DefaultProp_ForceModel.GravityField.Earth.Degree = 2;
+GMAT DefaultProp_ForceModel.GravityField.Earth.Order = 0;
+GMAT DefaultProp_ForceModel.GravityField.Earth.StmLimit = 100;
+GMAT DefaultProp_ForceModel.GravityField.Earth.PotentialFile = 'JGM2.cof';
+GMAT DefaultProp_ForceModel.GravityField.Earth.TideModel = 'None';
+
+%----------------------------------------
+%---------- Propagators
+%----------------------------------------
+
+Create Propagator DefaultProp;
+GMAT DefaultProp.FM = DefaultProp_ForceModel;
+GMAT DefaultProp.Type = RungeKutta89;
+GMAT DefaultProp.InitialStepSize = 60;
+GMAT DefaultProp.Accuracy = 9.999999999999999e-12;
+GMAT DefaultProp.MinStep = 0.001;
+GMAT DefaultProp.MaxStep = 2700;
+GMAT DefaultProp.MaxStepAttempts = 50;
+GMAT DefaultProp.StopIfAccuracyIsViolated = true;
+
+%----------------------------------------
+%---------- EventLocators
+%----------------------------------------
+
+Create ContactLocator ContactLocator1;
+GMAT ContactLocator1.Target = FOSSASAT_2E2;
+GMAT ContactLocator1.Filename = 'C:\usr\repositories\constellation-mission-analysis\GMAT\contacts_Reyjkiavik.txt';
+GMAT ContactLocator1.InputEpochFormat = 'TAIModJulian';
+GMAT ContactLocator1.InitialEpoch = '21545';
+GMAT ContactLocator1.StepSize = 10;
+GMAT ContactLocator1.FinalEpoch = '21545.138';
+GMAT ContactLocator1.UseLightTimeDelay = true;
+GMAT ContactLocator1.UseStellarAberration = true;
+GMAT ContactLocator1.WriteReport = true;
+GMAT ContactLocator1.RunMode = Automatic;
+GMAT ContactLocator1.UseEntireInterval = true;
+GMAT ContactLocator1.Observers = {Reykjiavik};
+GMAT ContactLocator1.LightTimeDirection = Transmit;
+
+%----------------------------------------
+%---------- Subscribers
+%----------------------------------------
+
+Create OrbitView DefaultOrbitView;
+GMAT DefaultOrbitView.SolverIterations = Current;
+GMAT DefaultOrbitView.UpperLeft = [ 0.4988235294117647 0 ];
+GMAT DefaultOrbitView.Size = [ 0.4988235294117647 0.9396751740139211 ];
+GMAT DefaultOrbitView.RelativeZOrder = 302;
+GMAT DefaultOrbitView.Maximized = false;
+GMAT DefaultOrbitView.Add = {FOSSASAT_2E2, Earth};
+GMAT DefaultOrbitView.CoordinateSystem = EarthMJ2000Eq;
+GMAT DefaultOrbitView.DrawObject = [ true true ];
+GMAT DefaultOrbitView.DataCollectFrequency = 1;
+GMAT DefaultOrbitView.UpdatePlotFrequency = 50;
+GMAT DefaultOrbitView.NumPointsToRedraw = 0;
+GMAT DefaultOrbitView.ShowPlot = true;
+GMAT DefaultOrbitView.MaxPlotPoints = 20000;
+GMAT DefaultOrbitView.ShowLabels = true;
+GMAT DefaultOrbitView.ViewPointReference = Earth;
+GMAT DefaultOrbitView.ViewPointVector = [ 30000 0 0 ];
+GMAT DefaultOrbitView.ViewDirection = Earth;
+GMAT DefaultOrbitView.ViewScaleFactor = 1;
+GMAT DefaultOrbitView.ViewUpCoordinateSystem = EarthMJ2000Eq;
+GMAT DefaultOrbitView.ViewUpAxis = Z;
+GMAT DefaultOrbitView.EclipticPlane = Off;
+GMAT DefaultOrbitView.XYPlane = On;
+GMAT DefaultOrbitView.WireFrame = Off;
+GMAT DefaultOrbitView.Axes = On;
+GMAT DefaultOrbitView.Grid = Off;
+GMAT DefaultOrbitView.SunLine = Off;
+GMAT DefaultOrbitView.UseInitialView = On;
+GMAT DefaultOrbitView.StarCount = 7000;
+GMAT DefaultOrbitView.EnableStars = On;
+GMAT DefaultOrbitView.EnableConstellations = On;
+
+Create GroundTrackPlot DefaultGroundTrackPlot;
+GMAT DefaultGroundTrackPlot.SolverIterations = Current;
+GMAT DefaultGroundTrackPlot.UpperLeft = [ 0 0 ];
+GMAT DefaultGroundTrackPlot.Size = [ 0.4988235294117647 0.9396751740139211 ];
+GMAT DefaultGroundTrackPlot.RelativeZOrder = 69;
+GMAT DefaultGroundTrackPlot.Maximized = false;
+GMAT DefaultGroundTrackPlot.Add = {FOSSASAT_2E2, Reykjiavik};
+GMAT DefaultGroundTrackPlot.DataCollectFrequency = 1;
+GMAT DefaultGroundTrackPlot.UpdatePlotFrequency = 50;
+GMAT DefaultGroundTrackPlot.NumPointsToRedraw = 0;
+GMAT DefaultGroundTrackPlot.ShowPlot = true;
+GMAT DefaultGroundTrackPlot.MaxPlotPoints = 20000;
+GMAT DefaultGroundTrackPlot.CentralBody = Earth;
+GMAT DefaultGroundTrackPlot.TextureMap = 'ModifiedBlueMarble.jpg';
+
+Create ReportFile report_TA_EA_r;
+GMAT report_TA_EA_r.SolverIterations = Current;
+GMAT report_TA_EA_r.UpperLeft = [ 0 0 ];
+GMAT report_TA_EA_r.Size = [ 0 0 ];
+GMAT report_TA_EA_r.RelativeZOrder = 0;
+GMAT report_TA_EA_r.Maximized = false;
+GMAT report_TA_EA_r.Filename = 'C:\usr\repositories\constellation-mission-analysis\GMAT\report_TA_EA.txt';
+GMAT report_TA_EA_r.Precision = 5;
+GMAT report_TA_EA_r.Add = {FOSSASAT_2E2.Earth.TA, FOSSASAT_2E2.Earth.EA, FOSSASAT_2E2.Earth.RMAG};
+GMAT report_TA_EA_r.WriteHeaders = true;
+GMAT report_TA_EA_r.LeftJustify = On;
+GMAT report_TA_EA_r.ZeroFill = Off;
+GMAT report_TA_EA_r.FixedWidth = true;
+GMAT report_TA_EA_r.Delimiter = ' ';
+GMAT report_TA_EA_r.ColumnWidth = 23;
+GMAT report_TA_EA_r.WriteReport = true;
+
+Create ReportFile ReportFile1;
+GMAT ReportFile1.SolverIterations = Current;
+GMAT ReportFile1.UpperLeft = [ 0 0 ];
+GMAT ReportFile1.Size = [ 0 0 ];
+GMAT ReportFile1.RelativeZOrder = 0;
+GMAT ReportFile1.Maximized = false;
+GMAT ReportFile1.Filename = 'ReportFile1.txt';
+GMAT ReportFile1.Precision = 16;
+GMAT ReportFile1.Add = {FOSSASAT_2E2.A1ModJulian, FOSSASAT_2E2.EarthMJ2000Eq.X};
+GMAT ReportFile1.WriteHeaders = true;
+GMAT ReportFile1.LeftJustify = On;
+GMAT ReportFile1.ZeroFill = Off;
+GMAT ReportFile1.FixedWidth = true;
+GMAT ReportFile1.Delimiter = ' ';
+GMAT ReportFile1.ColumnWidth = 23;
+GMAT ReportFile1.WriteReport = true;
+
+
+%----------------------------------------
+%---------- Mission Sequence
+%----------------------------------------
+
+BeginMissionSequence;
+Propagate DefaultProp(FOSSASAT_2E2) {FOSSASAT_2E2.ElapsedSecs = 35000};
