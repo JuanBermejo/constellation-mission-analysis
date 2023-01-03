@@ -1,11 +1,8 @@
 import numpy as np
 
-from astropy.coordinates import CartesianRepresentation, CartesianDifferential
-from poliastro.util import time_range
-from astropy import units as u
+from poliastro.core.angles import M_to_E, E_to_nu
 from astropy.time import Time
-
-from read_celestrak import *
+from read_celestrak import load_gp_from_celestrak, sat_to_dict
 
 
 def from_TLE_to_OrbParams(constellation):
@@ -57,5 +54,32 @@ def from_TLE_to_OrbParams(constellation):
         MM[j] = sat_dict["MEAN_MOTION"]
         a[j] = (mu/(MM[j]*2*np.pi/86400)**2)**(1/3) 
         MA[j] = sat_dict["MEAN_ANOMALY"]
-
+    # a, e, i_deg, RAAN_deg, AOP_deg, MA_deg = [6857.26216168], [0.0011313], [97.4697], [74.2364], [77.3213] #TODO
     return RAAN, i, e, a, AOP, MA
+
+def E_and_TA_from_MA(MA_rad, e):
+    E_rad = np.zeros_like(MA_rad)
+    TA_rad = np.zeros_like(MA_rad)
+    for index in range(len(MA_rad)):
+        E_rad[index] = M_to_E(MA_rad[index], e[index]) # dim (sat, )
+        TA_rad[index] = E_to_nu(E_rad[index], e[index]) # dim (sat, )
+    TA_rad = np.where(TA_rad <0 , TA_rad + 2*np.pi, TA_rad)
+
+    return E_rad, TA_rad
+
+def time_in_sat_epoch(sat_name):
+
+    sat = list(load_gp_from_celestrak(name=sat_name))[0]
+    sat_dict = sat_to_dict(sat,sat_name)
+    time = Time(sat_dict["EPOCH"], scale='utc')
+    # time =  Time('2023-01-02T15:46:51.437', scale='utc') #TODO
+    return time
+
+def time_in_constellation_epoch(constellation):
+    time = []
+    for sat_name in constellation:
+        sat = list(load_gp_from_celestrak(name=sat_name))[0]
+        sat_dict = sat_to_dict(sat,sat_name)
+        time.append(Time(sat_dict["EPOCH"], scale='utc'))
+    # time =  Time('2023-01-02T15:46:51.437', scale='utc') #TODO
+    return time
