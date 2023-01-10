@@ -1,5 +1,5 @@
 import numpy as np
-from FoM_functions import elevacion_sat, GMAT_parameters, contact_locator
+from FoM_functions import elevacion_sat, GMAT_parameters, contact_locator, time_in_sat_epoch
 
 print("Start running")
 # la GS está en Reyjkiavik (65.64737 N -20.24609 E) y se considera una elevación mínima de 15 deg
@@ -26,7 +26,7 @@ delta_t = 2 # s
 # Creo un vector de tiempos (en s) que va de 0 (paso por el perigeo) hasta t_fin en incrementos de delta_t
 time_span = np.linspace(0, t_fin, int(t_fin/delta_t)) # dim (t, )
 
-eps_sat = elevacion_sat(time_span, lat_GS, long_GS, constellation)
+eps_sat, delta_t = elevacion_sat(time_span, lat_GS, long_GS, constellation)
 GMAT_parameters(constellation)
 for j in range(len(constellation)):
-    contact_locator(eps_sat[:,j], eps_GS, time_span,constellation[j])
+    contact_locator(eps_sat[:,j], eps_GS, time_span,constellation[j], delta_t[j])

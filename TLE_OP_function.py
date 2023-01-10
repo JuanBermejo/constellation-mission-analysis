@@ -3,7 +3,9 @@ import numpy as np
 from poliastro.core.angles import M_to_E, E_to_nu
 from astropy.time import Time
 from read_celestrak import load_gp_from_celestrak, sat_to_dict
+from scipy.optimize import fsolve
 
+mu = 3.986E5
 
 def from_TLE_to_OrbParams(constellation):
     """
@@ -31,7 +33,7 @@ def from_TLE_to_OrbParams(constellation):
     """
 
     # Definition of the earth gravitational parameter [km^3/s^2]
-    mu = 3.986E5
+    # mu = 3.986E5
     
     # Definition of the result matrix for the orbital parameters 
     RAAN = np.zeros(len(constellation))
@@ -83,3 +85,18 @@ def time_in_constellation_epoch(constellation):
         time.append(Time(sat_dict["EPOCH"], scale='utc'))
     # time =  Time('2023-01-02T15:46:51.437', scale='utc') #TODO
     return time
+
+def prop_to_start_time(constellation, t0, T):
+
+    constellation_times = time_in_constellation_epoch(constellation)
+    span_difference = []
+    for time in constellation_times:
+        difference = max(constellation_times) - time
+        span_difference.append(difference.value) # time in days 
+
+    max_t_index = constellation_times.index(max(constellation_times))
+
+    span_difference_array = np.array(span_difference)*24*3600
+    t_in_orbit = (t0 + span_difference_array)%T
+
+    return t_in_orbit, max_t_index, span_difference_array
