@@ -130,7 +130,7 @@ def GMAT_parameters(constellation):
     print(tabla)
     # tabla.to_csv('outputs/GMAT_parameters.csv')
 
-def contact_locator(eps_sat, eps_GS, time_span, sat_name, delta_t):
+def contact_locator(eps_sat, eps_GS, time_span, constellation, delta_t):
     """
     Print de una tabla con la información de los contactos para un satélite dado
 
@@ -142,30 +142,40 @@ def contact_locator(eps_sat, eps_GS, time_span, sat_name, delta_t):
         elevación mínima de la Ground Station [deg]
     time_span : float array
         instantes temporales de evaluación de los contactos
-    sat_name: string
-        nombre del satélite del que se están evaluando los contactos
+    constellation: string array
+        nombres de los satélites de los que se están evaluando los contactos
     delta_t: float
-        desfase temporal desde la actualización del TLE del satélite hasta el inicio de la evaluación de los contactos
+        desfase temporal desde la actualización del TLE de cada satélite hasta el inicio de la evaluación de los contactos
+
+    Devuelve
+    -------
+    tabla : pandas.core.frame.DataFrame
+        Tabla con los tiempos de inicio, final y duración de los contactos para cada satélite
     """
     
     eps_GS= np.deg2rad(eps_GS) # rad
-    status = np.where((eps_sat >= eps_GS) & (eps_sat <= np.pi- eps_GS), 1, 0) # dim (t, sat)
-
-    contact = np.where(status == 1)[0]
-    contact_locator = []
-    contact_locator.append(contact[0])
-    for j in range(2,len(contact)):
-        if contact[j]-contact[j-1] > 1:
-            contact_locator.append(contact[j-1])
-            contact_locator.append(contact[j])
-    contact_locator.append(contact[-1])
-
-    start_time = time_in_sat_epoch(sat_name) + delta_t*u.s
-    start_time.format = 'isot'
-    
     data = []
-    for j in range(0,len(contact_locator),2):
-        data.append([ sat_name, start_time + time_span[contact_locator[j]]*u.s, start_time + time_span[contact_locator[j+1]]*u.s, time_span[contact_locator[j+1]]-time_span[contact_locator[j]] ])
+
+    for sat in range(len(constellation)):
+        sat_name =  constellation[sat]
+        
+        status = np.where((eps_sat[:,sat] >= eps_GS) & (eps_sat[:,sat] <= np.pi- eps_GS), 1, 0) # dim (t, sat)
+
+        contact = np.where(status == 1)[0]
+        contact_locator = []
+        contact_locator.append(contact[0])
+        for j in range(2,len(contact)):
+            if contact[j]-contact[j-1] > 1:
+                contact_locator.append(contact[j-1])
+                contact_locator.append(contact[j])
+        contact_locator.append(contact[-1])
+
+        start_time = time_in_sat_epoch(sat_name) + delta_t[sat]*u.s
+        start_time.format = 'isot'
+    
+        for k in range(0,len(contact_locator),2):
+            data.append([ sat_name, start_time + time_span[contact_locator[k]]*u.s, start_time + time_span[contact_locator[k+1]]*u.s, time_span[contact_locator[k+1]]-time_span[contact_locator[k]] ])
+    
     tabla = pd.DataFrame(data, columns=["Satellite", "Start Time [s]", "Stop Time [s]", "Duration [s]"])
-    print(tabla)
-    print("-----------------------------------------------------")
+
+    return tabla

@@ -22,11 +22,11 @@ constellation = (
 )
 
 t_fin = 23*3600 # s
-delta_t = 2 # s
-# Creo un vector de tiempos (en s) que va de 0 (paso por el perigeo) hasta t_fin en incrementos de delta_t
-time_span = np.linspace(0, t_fin, int(t_fin/delta_t)) # dim (t, )
+dt = 2 # s
+# Creo un vector de tiempos (en s) que va de 0 (paso por el perigeo) hasta t_fin en incrementos de dt
+time_span = np.linspace(0, t_fin, int(t_fin/dt)) # dim (t, )
 
 eps_sat, delta_t = elevacion_sat(time_span, lat_GS, long_GS, constellation)
 GMAT_parameters(constellation)
-for j in range(len(constellation)):
-    contact_locator(eps_sat[:,j], eps_GS, time_span,constellation[j], delta_t[j])
+contact_table = contact_locator(eps_sat, eps_GS, time_span, constellation, delta_t)
+print(contact_table)
