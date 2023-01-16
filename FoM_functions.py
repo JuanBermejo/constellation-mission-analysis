@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from astropy import units as u
 import csv
-from poliastro.core.angles import E_to_nu
+from poliastro.core.angles import E_to_nu, nu_to_E
 
 from TLE_OP_function import from_TLE_to_OrbParams, E_and_TA_from_MA, time_in_sat_epoch, time_in_constellation_epoch 
 from TLE_OP_function import prop_to_start_time, from_t_to_E_TA
@@ -104,7 +104,7 @@ def elevacion_sat(time_span, lat_GS, long_GS, constellation):
     eps_sat = np.arcsin((r_dot_cospsi - Rt)/np.sqrt(r**2 + Rt**2 - 2*Rt*r_dot_cospsi)) # dim (t, sat)
     eps_sat = np.where(eps_sat<0, eps_sat + 2*np.pi, eps_sat)
 
-    return eps_sat, delta_t
+    return eps_sat, delta_t, max_t_index, TA_in_orbit
 
 def GMAT_parameters(constellation):
     """
@@ -175,6 +175,91 @@ def contact_locator(eps_sat, eps_GS, time_span, constellation, delta_t):
     
         for k in range(0,len(contact_locator),2):
             data.append([ sat_name, start_time + time_span[contact_locator[k]]*u.s, start_time + time_span[contact_locator[k+1]]*u.s, time_span[contact_locator[k+1]]-time_span[contact_locator[k]] ])
+    
+    tabla = pd.DataFrame(data, columns=["Satellite", "Start Time [s]", "Stop Time [s]", "Duration [s]"])
+
+    return tabla
+
+def contact_locator_notional_sat(orbital_params, notional_names, epoch_time, time_span, lat_GS, long_GS, eps_GS):
+    
+    a = orbital_params[0, :]
+    e = orbital_params[1, :]
+    i_deg = orbital_params[2, :]
+    RAAN_deg = orbital_params[3, :]
+    AOP_deg = orbital_params[4, :]
+    TA0_deg = orbital_params[5, :]
+
+    # Paso los datos de los parámetros orbitales a radianes para utilizar np.cos, np.sin, np.tan, etc.
+    RAAN =  np.deg2rad(RAAN_deg) # rad, dim (sat, )
+    i =  np.deg2rad(i_deg) # rad, dim (sat, )
+    AOP =  np.deg2rad(AOP_deg) # rad, dim (sat, )
+    TA0_rad =  np.deg2rad(TA0_deg) # rad, dim (sat, )
+
+    E0_rad = np.zeros_like(TA0_rad)
+    for index in range(len(TA0_rad)):
+        E0_rad[index] = nu_to_E(TA0_rad[index], e[index]) # dim (sat, )
+
+    # Para el instante de la actualización de cada TLE, calculo la anomalía excéntrica (E0) y el tiempo respecto del paso 
+    # por el perigeo (t0) con la ecuación de Kepler. Cálculo del periodo orbital (T) de cada satélite
+    # E0_rad, TA0_rad = E_and_TA_from_MA(MA, e) # rad, dim (sat, )
+
+    w_rot_T = 2*np.pi/(24*3600) # rad/s
+
+    E = np.zeros( ( len(time_span), len(TA0_rad)) ) # dim (t, sat )
+    for k, (ecc,sma) in enumerate(zip(e,a)):
+        for index, t in enumerate(time_span):
+            # Hallo la anomalía excéntrica (rad) para cada instante de tiempo y para cada satélite
+            def f(x):
+                return x - ecc*np.sin(x) - np.sqrt(mu/sma**3)*t
+            E[index, k] = fsolve(f, 0) # rad
+    E_rad = np.where(E<0, E+2*np.pi, E)
+    E_rad += E0_rad
+
+    # Hallo el radio (km) y la anomalía verdadera (rad) en cada instante temporal para cada satélite
+    r = a*(1-e*np.cos(E_rad)) # km, dim (t, sat)
+    TA_rad = 2*np.arctan(np.sqrt((1+e)/(1-e))*np.tan(E/2)) # rad, dim (t, sat)
+    TA_rad = np.where(TA_rad<0, TA_rad+2*np.pi, TA_rad)
+    TA_rad += TA0_rad
+
+    # Hallo el tiempo sidereo local de la estación en el inicio de la evaluación de los contactos --> en el momento 
+    # temporal del satélite que ha actualizado hace menos tiempo su TLE (GS_time). GS_time es un objeto de astropy.time que tiene 
+    # asociado un atributo que convierte el tiempo dado a TLS para una longitud determinada ( .sideral_time() ). El resultado de 
+    # este atributo es un tiempo en horas, minutos y segundos que para el problema que se está evaluando hay que pasar a radianes.
+    # Además, se necesita un LST de la GS para cada instante de evaluación de los contactos --> GS_LST_rad
+    GS_LST_deg = epoch_time.sidereal_time('mean', longitude=long_GS*u.deg).value # h, min, s; 
+    GS_LST_rad = GS_LST_deg*15*np.pi/180 + w_rot_T*time_span # dim (t, )
+
+    # Con todos estos datos se calcula la elevación del satélite 
+    # Ec(24) apartado 6.4 Elices. dim r_dot_cospsi (t, sat)
+    lat_GS = np.deg2rad(lat_GS)
+    GS_LST_rad = GS_LST_rad.reshape(len(GS_LST_rad),1) # dim (t, 1)
+    r_dot_cospsi = r*( np.cos(lat_GS)*( np.cos(AOP+TA_rad)*np.cos(GS_LST_rad-RAAN) + np.cos(i)*np.sin(AOP+TA_rad)*np.sin(GS_LST_rad-RAAN) ) + np.sin(lat_GS)*np.sin(i)*np.sin(AOP+TA_rad) )
+    # Ec(21) apartado 6.4 Elices 
+    eps_sat = np.arcsin((r_dot_cospsi - Rt)/np.sqrt(r**2 + Rt**2 - 2*Rt*r_dot_cospsi)) # dim (t, sat)
+    eps_sat = np.where(eps_sat<0, eps_sat + 2*np.pi, eps_sat)
+
+    # contact locator
+    eps_GS= np.deg2rad(eps_GS) # rad
+    data = []
+
+    for sat in range(len(notional_names)):
+        sat_name =  notional_names[sat]
+        
+        status = np.where((eps_sat[:,sat] >= eps_GS) & (eps_sat[:,sat] <= np.pi- eps_GS), 1, 0) # dim (t, sat)
+
+        contact = np.where(status == 1)[0]
+        contact_locator = []
+        contact_locator.append(contact[0])
+        for j in range(2,len(contact)):
+            if contact[j]-contact[j-1] > 1:
+                contact_locator.append(contact[j-1])
+                contact_locator.append(contact[j])
+        contact_locator.append(contact[-1])
+
+        epoch_time.format = 'isot'
+    
+        for k in range(0,len(contact_locator),2):
+            data.append([ sat_name, epoch_time + time_span[contact_locator[k]]*u.s, epoch_time + time_span[contact_locator[k+1]]*u.s, time_span[contact_locator[k+1]]-time_span[contact_locator[k]] ])
     
     tabla = pd.DataFrame(data, columns=["Satellite", "Start Time [s]", "Stop Time [s]", "Duration [s]"])
 
