@@ -211,5 +211,7 @@ Revolution_number, Classification, International_designator, Element_set_number)
     TLE1 += checksum_mod10(TLE1)
     TLE2 += checksum_mod10(TLE2)
 
-    TLE = (TLE1, TLE2)
+    TLE = []
+    TLE.append(TLE1)
+    TLE.append(TLE2)
     return(TLE)
