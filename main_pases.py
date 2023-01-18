@@ -10,8 +10,8 @@ import numpy as np
 import pandas as pd
 import os
 
-#For TLE fetching
-from satellite_tle import fetch_tle_from_celestrak
+# #For TLE fetching
+# from satellite_tle import fetch_tle_from_celestrak
 
 #For satellite propagation
 from sgp4.api import Satrec
@@ -197,33 +197,33 @@ def propagate(satellite, starting_date, propagation_time, dT):
     return teme_p, teme_v, time
 
 
-def log_TLE(UTC_time):
-    """
-    Open the TLE log and write the TLE of the day
+# def log_TLE(UTC_time):
+#     """
+#     Open the TLE log and write the TLE of the day
 
-    Parameters
-    ----------
-    date :  str
-        UTC Date in ISO format: "2021-01-01 12:00:00.000"
-    """
+#     Parameters
+#     ----------
+#     date :  str
+#         UTC Date in ISO format: "2021-01-01 12:00:00.000"
+#     """
 
-    #keep only the year-month-day part
-    date = UTC_time[0:10]
+#     #keep only the year-month-day part
+#     date = UTC_time[0:10]
 
-    #Satellite data
-    upmsat_id = '46276'
-    upmsat_TLE = fetch_tle_from_celestrak(upmsat_id)
+#     #Satellite data
+#     upmsat_id = '46276'
+#     upmsat_TLE = fetch_tle_from_celestrak(upmsat_id)
 
-    TLE_1 = upmsat_TLE[1]
-    TLE_2 = upmsat_TLE[2]
+#     TLE_1 = upmsat_TLE[1]
+#     TLE_2 = upmsat_TLE[2]
 
-    #open log
-    file = open(rel_path + '/logs/TLE_log.txt' , 'a')
+#     #open log
+#     file = open(rel_path + '/logs/TLE_log.txt' , 'a')
 
-    # write date and TLE
-    file.write(date + '\n')
-    file.write(TLE_1 + '\n')
-    file.write(TLE_2 + '\n')
-    file.close()
+#     # write date and TLE
+#     file.write(date + '\n')
+#     file.write(TLE_1 + '\n')
+#     file.write(TLE_2 + '\n')
+#     file.close()
 
-    return 0
+#     return 0

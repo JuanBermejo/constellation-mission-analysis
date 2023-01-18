@@ -139,9 +139,10 @@ def checksum_mod10(variable):
     checksum = str(counter % 10)
     return checksum
 
-def Generate_TLE(Inclination, RAAN, Eccentricity, AOP, MeanAnomaly, MeanMotion, MeanMotionDot,
-MeanMotionDDot, BSTAR, Epoch, Satellite_catalog_number,
-Revolution_number, Classification, International_designator, Element_set_number):
+def Generate_TLE_2(Inclination, RAAN, Eccentricity, AOP, MeanAnomaly, MeanMotion, MeanMotionDot,
+                   MeanMotionDDot, BSTAR, Epoch, Satellite_catalog_number,
+                   Revolution_number, Classification, International_designator, Element_set_number):
+
     """
     Generates realistics Two-Line Elements (TLE) for notional systems
     Reference: ROCKWOOD, Troy; STEEGER, Greg; STEIN, Matthew. Generating Realistic Two-Line Elements for Notional
@@ -149,24 +150,24 @@ Revolution_number, Classification, International_designator, Element_set_number)
 
     Parameters
     ----------
-    Inclination: string
+    Inclination: float
         inclination of the orbit [deg]
-    RAAN: string
+    RAAN: float
         right ascension of the ascending node [deg]
-    Eccentricity:string
+    Eccentricity:float
         eccentricity of the orbit [-]
-    AOP: string
+    AOP: float
         argument of perigee [deg]
-    MeanAnomaly: string
+    MeanAnomaly: float
         mean anomaly of the orbit [deg]
-    MeanMotion: string
+    MeanMotion: float
         mean motion of the satellite [rev/day]
-    MeanMotionDot: string (+.XXXXXXXX)
+    MeanMotionDot: float (+.XXXXXXXX)
         first time derivative of the mean motion []
-    MeanMotionDDot: string (+XXXXX-X)
+    MeanMotionDDot: float (+XXXXX-X)
         second time derivative of the mean motion []
         leading decimal point assumed
-    BSTAR: string (+XXXXX-X)
+    BSTAR: float (+XXXXX-X)
         drag term []
         leading decimal point assumed
     Epoch: string (XXYYY.YYYYYYYY)
@@ -182,7 +183,7 @@ Revolution_number, Classification, International_designator, Element_set_number)
         XX: last two digits of launch year
         YYY: launch number of the year
         ZZZ: piece of the launch
-    Element_set_number: string
+    Element_set_number: integer
         -
 
     Notes:
@@ -201,24 +202,6 @@ Revolution_number, Classification, International_designator, Element_set_number)
     TLE : string
         TLE of a notional system
     """
-
-    TLE1 = "1" + " " + Satellite_catalog_number + Classification + " " + International_designator + "   " + Epoch.format(":") + " "
-    TLE1 += MeanMotionDot[:10] + "  " + MeanMotionDDot[:8] + " " + BSTAR[:8] + "  " + "0" + "  " + Element_set_number[:4]
-
-    TLE2 = "2" + " " + Satellite_catalog_number + "  " + Inclination[:7] + "  " + RAAN[:8] + " " + Eccentricity[2:9] + " " + AOP[:8] + " "
-    TLE2 += MeanAnomaly[:8] + " " + MeanMotion[:11] + "  " + Revolution_number
-
-    TLE1 += checksum_mod10(TLE1)
-    TLE2 += checksum_mod10(TLE2)
-
-    TLE = []
-    TLE.append(TLE1)
-    TLE.append(TLE2)
-    return(TLE)
-
-def Generate_TLE_2(Inclination, RAAN, Eccentricity, AOP, MeanAnomaly, MeanMotion, MeanMotionDot,
-                   MeanMotionDDot, BSTAR, Epoch, Satellite_catalog_number,
-                   Revolution_number, Classification, International_designator, Element_set_number):
 
     TLE1 = "1" + " " + Satellite_catalog_number + Classification + " " + International_designator + "   " + "{:14.8f}".format(Epoch) + " "
     TLE1 += "{:11.8f}".format(MeanMotionDot).replace("0.", ".") + " " + "{:12.5E}".format(MeanMotionDDot).replace("0.", "").replace("E+0","+").replace("E-0", "-").replace(".","") + " " + "{:11.4E}".format(BSTAR/10).replace("E+0","+").replace("E-0", "-").replace(".","") + " " + "0" + " " + "{:4}".format(Element_set_number)
