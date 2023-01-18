@@ -46,9 +46,38 @@ def _generate_url(catalog_number, international_designator, name):
     )
     return url
 
+def _generate_url_no_xml(catalog_number, international_designator, name):
+    params = {
+        "CATNR": catalog_number,
+        "INTDES": international_designator,
+        "NAME": name,
+    }
+    param_names = [
+        param_name
+        for param_name, param_value in params.items()
+        if param_value is not None
+    ]
+    if len(param_names) != 1:
+        raise ValueError(
+            "Specify exactly one of catalog_number, international_designator, or name"
+        )
+    param_name = param_names[0]
+    param_value = params[param_name]
+    url = (
+        "https://celestrak.org/NORAD/elements/gp.php?"
+        f"{param_name}={param_value}"
+    )
+    return url
 
 def _segments_from_query(url):
-    response = httpx.get(url)
+    for _ in range(5):
+        try:
+            response = httpx.get(url)
+        except Exception as ex:
+            print(ex)
+        else:
+            break
+        
     response.raise_for_status()
 
     if response.text == "No GP data found":
