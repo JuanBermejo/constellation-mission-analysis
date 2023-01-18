@@ -131,7 +131,7 @@ def MeanMotion(a):
 
 def checksum_mod10(variable):
     counter = 0
-    for c in variable:  
+    for c in variable:
         if c == "-":
             counter += 1
         elif c.isnumeric():
@@ -139,12 +139,12 @@ def checksum_mod10(variable):
     checksum = str(counter % 10)
     return checksum
 
-def Generate_TLE(Inclination, RAAN, Eccentricity, AOP, MeanAnomaly, MeanMotion, MeanMotionDot, 
+def Generate_TLE(Inclination, RAAN, Eccentricity, AOP, MeanAnomaly, MeanMotion, MeanMotionDot,
 MeanMotionDDot, BSTAR, Epoch, Satellite_catalog_number,
 Revolution_number, Classification, International_designator, Element_set_number):
     """
     Generates realistics Two-Line Elements (TLE) for notional systems
-    Reference: ROCKWOOD, Troy; STEEGER, Greg; STEIN, Matthew. Generating Realistic Two-Line Elements for Notional 
+    Reference: ROCKWOOD, Troy; STEEGER, Greg; STEIN, Matthew. Generating Realistic Two-Line Elements for Notional
     Space Vehicles and Constellations. arXiv preprint arXiv:2203.04204, 2022.
 
     Parameters
@@ -155,7 +155,7 @@ Revolution_number, Classification, International_designator, Element_set_number)
         right ascension of the ascending node [deg]
     Eccentricity:string
         eccentricity of the orbit [-]
-    AOP: string 
+    AOP: string
         argument of perigee [deg]
     MeanAnomaly: string
         mean anomaly of the orbit [deg]
@@ -183,18 +183,18 @@ Revolution_number, Classification, International_designator, Element_set_number)
         YYY: launch number of the year
         ZZZ: piece of the launch
     Element_set_number: string
-        - 
-    
-    Notes: 
+        -
+
+    Notes:
     * The classification, international designator value, element set number and revolution number can
     all be chosen at will, do not affect the simulation
     * The satellite catalog number should not conflict with other satellites simulations
-    * The ephemeris type has been set to 0 
+    * The ephemeris type has been set to 0
     * The epoch can be chosen at will but with some considerations. If working with notional systems, then select similar epochs.
-    If mixing notional with real satellites, choose an epoch close to the real systems of interest. 
+    If mixing notional with real satellites, choose an epoch close to the real systems of interest.
     * The inclination, RAAN, eccentricity, AOP, and mean anomaly are all chosen according to the desired simulation.
-    * The first and second time derivatives of the mean motion and, the drag term can be derived from existing TLE. This terms are 
-    important to obtain realistic TLE. 
+    * The first and second time derivatives of the mean motion and, the drag term can be derived from existing TLE. This terms are
+    important to obtain realistic TLE.
 
     Returns
     -------
@@ -202,12 +202,12 @@ Revolution_number, Classification, International_designator, Element_set_number)
         TLE of a notional system
     """
 
-    TLE1 = "1" + " " + Satellite_catalog_number + Classification + " " + International_designator + " " + Epoch + " "
-    TLE1 += MeanMotionDot + " " + MeanMotionDDot + " " + BSTAR + " " + "0" + Element_set_number 
+    TLE1 = "1" + " " + Satellite_catalog_number + Classification + " " + International_designator + "   " + Epoch.format(":") + " "
+    TLE1 += MeanMotionDot[:10] + "  " + MeanMotionDDot[:8] + " " + BSTAR[:8] + "  " + "0" + "  " + Element_set_number[:4]
 
-    TLE2 = "2" + " " + Satellite_catalog_number + " " + Inclination + " " + RAAN + " " + Eccentricity + " " + AOP + " " 
-    TLE2 += MeanAnomaly + " " + MeanMotion + " " + Revolution_number
-    
+    TLE2 = "2" + " " + Satellite_catalog_number + "  " + Inclination[:7] + "  " + RAAN[:8] + " " + Eccentricity[2:9] + " " + AOP[:8] + " "
+    TLE2 += MeanAnomaly[:8] + " " + MeanMotion[:11] + "  " + Revolution_number
+
     TLE1 += checksum_mod10(TLE1)
     TLE2 += checksum_mod10(TLE2)
 
@@ -215,3 +215,21 @@ Revolution_number, Classification, International_designator, Element_set_number)
     TLE.append(TLE1)
     TLE.append(TLE2)
     return(TLE)
+
+def Generate_TLE_2(Inclination, RAAN, Eccentricity, AOP, MeanAnomaly, MeanMotion, MeanMotionDot,
+                   MeanMotionDDot, BSTAR, Epoch, Satellite_catalog_number,
+                   Revolution_number, Classification, International_designator, Element_set_number):
+
+    TLE1 = "1" + " " + Satellite_catalog_number + Classification + " " + International_designator + "   " + "{:14.8f}".format(Epoch) + " "
+    TLE1 += "{:11.8f}".format(MeanMotionDot).replace("0.", ".") + " " + "{:12.5E}".format(MeanMotionDDot).replace("0.", "").replace("E+0","+").replace("E-0", "-").replace(".","") + " " + "{:11.4E}".format(BSTAR/10).replace("E+0","+").replace("E-0", "-").replace(".","") + " " + "0" + " " + "{:4}".format(Element_set_number)
+
+    TLE2 = "2" + " " + Satellite_catalog_number + " " + "{:8.4f}".format(Inclination) + " " + "{:8.4f}".format(RAAN) + " " + "{:9.7f}".format(Eccentricity).replace("0.","") + " " + "{:8.4f}".format(AOP) + " "
+    TLE2 += "{:8.4f}".format(MeanAnomaly) + " " + "{:11.8f}".format(MeanMotion) + " " + Revolution_number
+
+    TLE1 += checksum_mod10(TLE1)
+    TLE2 += checksum_mod10(TLE2)
+
+    # if len(TLE1) > 69 or len(TLE2) > 69:
+    #     raise
+
+    return [TLE1, TLE2]
