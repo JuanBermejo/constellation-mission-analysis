@@ -23,11 +23,14 @@ from astropy.time import Time
 from astropy.coordinates import EarthLocation, AltAz
 from astropy.coordinates import TEME, CartesianDifferential, CartesianRepresentation
 
+#
+from read_celestrak import _generate_url_no_xml
+from urllib.request import urlopen
 
 rel_path = os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
 
 
-def get_az_sequence(TLE, GS, date, period):
+def get_az_sequence(TLE, GS, date, period, sat_name):
     """
     This function computes the date of the accesses for the period
     demanded and the sequence of azimuth to return the rotor safely
@@ -89,12 +92,14 @@ def get_az_sequence(TLE, GS, date, period):
         idx_start_fine, idx_end_fine = detect_access(el_fine, min_elevation_GS)
 
         start_date = (time_fine[idx_start_fine][0])
+        start_date.format = 'iso'
         end_date = (time_fine[idx_end_fine][0])
+        end_date.format = 'iso'
         duration = (end_date - start_date).value
 
-        row_dict["Satellite"] = TLE_1[2:8]
-        row_dict["Start Time [s]"] = (start_date - date0).value * 86400
-        row_dict["Stop Time [s]"] = (end_date - date0).value * 86400
+        row_dict["Satellite"] = sat_name
+        row_dict["Start Time [s]"] = start_date
+        row_dict["Stop Time [s]"] = end_date
         row_dict["Duration [s]"] = duration * 86400
         # str(int(duration * 24 * 60)) + ":" + str(int(duration * 24 * 60  % 1 * 60))
 
@@ -196,6 +201,28 @@ def propagate(satellite, starting_date, propagation_time, dT):
 
     return teme_p, teme_v, time
 
+def constellation_TLE_list(catalog_numbers):
+    real_TLE_list = []
+    for index, num in enumerate(catalog_numbers):
+        url = _generate_url_no_xml(catalog_number=num, international_designator=None,name=None)
+
+        # Abrir URL.
+        r = urlopen(url)
+        # Leer el contenido y e imprimir su tamaño.
+        url_TLE = r.read()
+        # Cerrar para liberar recursos.
+        r.close()
+
+        encoding = 'utf-8'
+        s = str(url_TLE, encoding)
+
+        _, TLE1, TLE2 = s.splitlines()
+
+        TLE_sat = [TLE1, TLE2]
+
+        real_TLE_list.append(TLE_sat)
+    
+    return real_TLE_list 
 
 # def log_TLE(UTC_time):
 #     """
