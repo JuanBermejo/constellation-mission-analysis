@@ -127,8 +127,8 @@ def GMAT_parameters(constellation):
         data.append([constellation[j], a[j], e[j], i_deg[j], RAAN_deg[j], AOP_deg[j], np.rad2deg(TA0_rad[j]), TLE_times[j] ])
     
     tabla = pd.DataFrame(data, columns=["Satelite", "SMA [km]", "ECC", "INC [deg]", "RAAN [deg]", "AOP [deg]", "TA0 [deg]", "Epoch in UTC Gregorian"])
-    print(tabla)
-    # tabla.to_csv('outputs/GMAT_parameters.csv')
+    
+    return tabla
 
 def contact_locator(eps_sat, eps_GS, time_span, constellation, delta_t):
     """
