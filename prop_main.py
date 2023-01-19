@@ -35,49 +35,32 @@ constellation = (
 
 ## CONTACTOS DE SATÉLITES FOSSA
 real_TLE_list = constellation_TLE_list(catalog_numbers)
-# real_TLE_list = []
-# for index, num in enumerate(catalog_numbers):
-#     url = _generate_url_no_xml(catalog_number=num, international_designator=None,name=None)
-
-#     # Abrir URL.
-#     r = urlopen(url)
-#     # Leer el contenido y e imprimir su tamaño.
-#     url_TLE = r.read()
-#     # Cerrar para liberar recursos.
-#     r.close()
-
-#     encoding = 'utf-8'
-#     s = str(url_TLE, encoding)
-
-#     _, TLE1, TLE2 = s.splitlines()
-
-#     TLE_sat = [TLE1, TLE2]
-
-#     real_TLE_list.append(TLE_sat)
-
 
 # NOTIONAL SATELLITES --> NOTIONAL TLEs
 a_notional = np.array([6902.741031727869, 6902.741031727869, 6902.741031727869, 6902.741031727869])
 e_notional = np.array([0.0010708090909090908, 0.0010708090909090908, 0.0010708090909090908, 0.0010708090909090908])
 i_notional = np.array([97.49506363636364, 97.49506363636364, 97.49506363636364, 97.49506363636364])
-RAAN_notional = np.array([0, 0, 0, 0])
+RAAN_notional = np.array([ [0, 0, 0, 0],[30,30,30,30],[60,60,60,60],[120,120,120,120],[150,150,150,150],[180,180,180,180] ])
 AOP_notional = np.array([0, 0, 0, 0])
 E_notional = np.array([0, 90, 180, 270])
 MA_notional = E_notional + e_notional*np.sin(E_notional)
 ha_notional = a_notional*(1+e_notional)
-notional_names = ("52780", "52781", "52782", "52783")
+notional_names = ("52780", "52781", "52782", "52783", "52784", "52785")
 
 _, _, max_t_index, _ = elevacion_sat(time_span, lat_GS, long_GS, constellation)
 
 # accedo al epoch time del satélite que se ha actualizado más recientmente
 epoch_time = float(real_TLE_list[max_t_index][0].split()[3])
-
 Satellite_catalog_number = 52780
 
-notional_TLE_list = []
-for sat in range (len(a_notional)):
-    notional_TLE_list.append( generate_FOSSA_TLE(i_notional[sat], RAAN_notional[sat], e_notional[sat], AOP_notional[sat], MA_notional[sat], a_notional[sat], epoch_time, str(Satellite_catalog_number)) )
-    Satellite_catalog_number += 1
+PS_notional_TLE_list = []
+for RAAN_case in range(len(RAAN_notional)): 
+    notional_TLE_list = []
+    for sat in range (len(a_notional)):
+        notional_TLE_list.append( generate_FOSSA_TLE(i_notional[sat], RAAN_notional[RAAN_case, sat], e_notional[sat], AOP_notional[sat], MA_notional[sat], a_notional[sat], epoch_time, str(Satellite_catalog_number)) )
+        Satellite_catalog_number += 1
+    Satellite_catalog_number += 20
+    PS_notional_TLE_list.append(notional_TLE_list)
 
 ## TABLAS DE CONTACTOS
 # 1) Hallar el inicio del estudio de los contactos
@@ -95,12 +78,16 @@ for index, TLE in enumerate(real_TLE_list):
 real_contact_table = pd.concat(df_list)
 
 # 3) satélites ficticios 
-notional_list = []
-for index, TLE in enumerate(notional_TLE_list):
-    df = get_az_sequence(TLE, GS, str(date), 1, notional_names[index])
-    notional_list.append(df)
-
-result_contact_table = pd.concat([real_contact_table, pd.concat(notional_list)])
+# PS_notional_list = []
+result_contact_table = []
+for RAAN_case in range(len(RAAN_notional)):
+    notional_list = []
+    for index in range(len(PS_notional_TLE_list[RAAN_case])):
+        TLE = PS_notional_TLE_list[RAAN_case][index]
+        df = get_az_sequence(TLE, GS, str(date), 1, notional_names[index])
+        notional_list.append(df)
+    # PS_notional_list.append(pd.concat(notional_list))
+    result_contact_table.append(pd.concat([real_contact_table, pd.concat(notional_list)]))
 
 ## DURACIÓN Y TIEMPO DE REVISITA
 # Fossa
@@ -110,19 +97,18 @@ real_t_revisita = real_t_revisita*24*60
 real_t_revisita = np.array([t.value for t in real_t_revisita])
 
 # Notional
-result_sort_contacts = result_contact_table.sort_values('Start Time [s]')
-result_t_revisita = np.diff(result_sort_contacts['Start Time [s]'])
-result_t_revisita = result_t_revisita*24*60
-result_t_revisita = np.array([t.value for t in result_t_revisita])
+result_sort_contacts = []
+result_t_revisita = []
+for RAAN_case in range(len(RAAN_notional)):
+    result_sort_contacts.append( result_contact_table[RAAN_case].sort_values('Start Time [s]') )
+    t_revisita = np.diff(result_sort_contacts[RAAN_case]['Start Time [s]'])*24*60
+    result_t_revisita.append(np.array([t.value for t in t_revisita]))
 
 ## GRÁFICO DE CAJAS
-datos_dur_fossa = real_sort_contacts["Duration [s]"]/60
-datos_dur_comb = result_sort_contacts["Duration [s]"]/60
+datos_graf_dur = [real_sort_contacts["Duration [s]"]/60, result_sort_contacts[0]["Duration [s]"]/60, result_sort_contacts[1]["Duration [s]"]/60, result_sort_contacts[2]["Duration [s]"]/60, result_sort_contacts[3]["Duration [s]"]/60, result_sort_contacts[4]["Duration [s]"]/60, result_sort_contacts[5]["Duration [s]"]/60 ]
+datos_graf_rev = [real_t_revisita, result_t_revisita[0], result_t_revisita[1], result_t_revisita[2], result_t_revisita[3], result_t_revisita[4], result_t_revisita[5]]
 
-datos_rev_fossa = real_t_revisita
-datos_rev_comb = result_t_revisita
-
-datos_graf_dur = [datos_dur_fossa, datos_dur_comb]
-datos_graf_rev = [datos_rev_fossa, datos_rev_comb]
-
-print_FoM(datos_graf_dur, datos_graf_rev)
+print("Valor medio del tiempo de revisita en la constelación de FOSSA =", np.mean(real_t_revisita), "minutos")
+for RAAN_case in range(len(RAAN_notional)):
+    print("Valor medio del tiempo de revisita en la constelación ficticia RAAN", RAAN_notional[RAAN_case,0], "\u00B0 =", np.mean(result_t_revisita[RAAN_case]), "minutos")
+print_FoM(datos_graf_dur, datos_graf_rev, ["FOSSA", "RAAN = 0\u00B0", "RAAN = 30\u00B0", "RAAN = 60\u00B0", "RAAN = 120\u00B0", "RAAN = 150\u00B0", "RAAN = 180\u00B0"])

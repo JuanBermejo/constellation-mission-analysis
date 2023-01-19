@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def print_FoM(datos_graf_dur, datos_graf_rev):
+def print_FoM(datos_graf_dur, datos_graf_rev, labels_vec):
 
     # FIGURA DE LA DURACIÓN DE LOS CONTACTOS
     fig_dur = plt.figure(1, figsize=(9, 5))
@@ -14,7 +14,7 @@ def print_FoM(datos_graf_dur, datos_graf_rev):
     ax_dur.set_title("Tiempo de visita de los contactos ordenados", loc='center', fontdict={'fontsize':14, 'fontweight':'bold'})
     
     # crear el grafico de cajas, incluir labels de los datos que se están representando
-    bp_dur = ax_dur.boxplot(datos_graf_dur, labels = ["FOSSA", "AMPLIACIÓN"])
+    bp_dur = ax_dur.boxplot(datos_graf_dur, labels = labels_vec)
 
     # visualización mas facil los puntos atípicos
     for flier in bp_dur['fliers']:
@@ -27,11 +27,11 @@ def print_FoM(datos_graf_dur, datos_graf_rev):
     ax_rev = fig_rev.add_subplot(111)
 
     # título del gráfico y label del eje y
-    plt.ylabel('Tiempo de visita [min]')
-    ax_rev.set_title("Tiempo de visita de los contactos ordenados", loc='center', fontdict={'fontsize':14, 'fontweight':'bold'})
+    plt.ylabel('Tiempo de revisita [min]')
+    ax_rev.set_title("Tiempo de revisita de los contactos ordenados", loc='center', fontdict={'fontsize':14, 'fontweight':'bold'})
     
     # crear el grafico de cajas, incluir labels de los datos que se están representando
-    bp_rev = ax_rev.boxplot(datos_graf_rev, labels = ["FOSSA", "AMPLIACIÓN"])
+    bp_rev = ax_rev.boxplot(datos_graf_rev, labels = labels_vec)
     
     # visualización mas facil los puntos atípicos
     for flier in bp_rev['fliers']:

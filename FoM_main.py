@@ -31,9 +31,9 @@ time_span = np.linspace(0, t_fin, int(t_fin/dt)) # dim (t, )
 
 eps_sat, delta_t, max_t_index, TA_in_orbit = elevacion_sat(time_span, lat_GS, long_GS, constellation)
 
-print("Los parámetros orbitales obtenidos de los TLEs de los satélites son:")
-GMAT_params = GMAT_parameters(constellation)
-print("----------------------------------------------------------------------------")
+# print("Los parámetros orbitales obtenidos de los TLEs de los satélites son:")
+# GMAT_params = GMAT_parameters(constellation)
+# print("----------------------------------------------------------------------------")
 
 ## CONTACTOS DE SATÉLITES FOSSA
 real_contact_table = contact_locator(eps_sat, eps_GS, time_span, constellation, delta_t)
@@ -74,4 +74,6 @@ datos_rev_comb = result_t_revisita
 datos_graf_dur = [datos_dur_fossa, datos_dur_comb]
 datos_graf_rev = [datos_rev_fossa, datos_rev_comb]
 
-print_FoM(datos_graf_dur, datos_graf_rev)
+print("Valor medio del tiempo de revisita en la constelación de FOSSA =", np.mean(real_t_revisita), "minutos")
+print("Valor medio del tiempo de revisita en la constelación ficticia RAAN 0º =", np.mean(result_t_revisita), "minutos")
+print_FoM(datos_graf_dur, datos_graf_rev, ["FOSSA", "RAAN = 0\u00B0"])
